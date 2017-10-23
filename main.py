@@ -39,10 +39,16 @@ for i in range(incidents):
 with open('incident_list.pkl', 'wb') as fp:
     pickle.dump(lat_lon, fp)
 
+lat_grid = np.linspace(37.706, 37.814, 5)
+lon_grid = np.linspace(-122.519, -122.354, 7)
+
 incident_grid = np.zeros([incidents, 2])
 for i in range(incidents):
     incident_grid[i][0] = bisect.bisect(lat_grid, lat_lon[i][0]) - 1
     incident_grid[i][1] = bisect.bisect(lon_grid, lat_lon[i][1]) - 1
+
+df_incident = pd.DataFrame(incident_grid)
+df_incident[2] = 1
 
 strava = client.Client(access_token = credentials.key['strava'])
 
@@ -65,4 +71,22 @@ effort = np.zeros([len(seg_obj_list), 3])
 for i in range(len(seg_obj_list)):
     effort[i][0] = bisect.bisect(lat_grid, seg_obj_list[i].start_latlng[0]) - 1
     effort[i][1] = bisect.bisect(lon_grid, seg_obj_list[i].start_latlng[1]) - 1
-    effort[i][2] = seg_obj_list[i].effort_count
+    adj_year = 365.0 / (seg_obj_list[i].updated_at - seg_obj_list[i].created_at).days
+    effort[i][2] = seg_obj_list[i].effort_count * adj_year
+
+df_effort = pd.DataFrame(data = effort)
+mean_effort = df_effort.groupby([0, 1], as_index = False).mean()
+sum_effort = df_effort.groupby([0, 1], as_index = False).sum()
+max_effort = df_effort.groupby([0, 1], as_index = False).max()
+
+incident_group = df_incident.groupby([0, 1], as_index = False).count()
+
+incident_mean = incident_group.merge(mean_effort, left_on = [0, 1], right_on = [0, 1])
+incident_mean.columns = [0, 1, 'inc', 'mean']
+incident_max = incident_mean.merge(max_effort, left_on = [0, 1], right_on = [0, 1])
+incident_max.columns = [0, 1, 'inc', 'mean', 'max']
+incident_sum = incident_max.merge(sum_effort, left_on = [0, 1], right_on = [0, 1])
+incident_sum.columns = [0, 1, 'inc', 'mean', 'max', 'sum']
+incident_sum['inc_mean'] = incident_sum['inc'] / incident_sum['mean']
+incident_sum['inc_max'] = incident_sum['inc'] / incident_sum['max']
+incident_sum['inc_sum'] = incident_sum['inc'] / incident_sum['sum']

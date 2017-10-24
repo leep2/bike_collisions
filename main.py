@@ -6,6 +6,7 @@ from stravalib import client
 import polyline
 import pickle
 import bisect
+import gmplot
 
 df = pd.read_csv('CollisionRecords.txt')
 
@@ -90,3 +91,25 @@ incident_sum.columns = [0, 1, 'inc', 'mean', 'max', 'sum']
 incident_sum['inc_mean'] = incident_sum['inc'] / incident_sum['mean']
 incident_sum['inc_max'] = incident_sum['inc'] / incident_sum['max']
 incident_sum['inc_sum'] = incident_sum['inc'] / incident_sum['sum']
+
+color_progression = ['Green', 'YellowGreen', 'Yellow', 'Orange', 'OrangeRed', 'Red']
+total_colors = len(color_progression)
+inc_max_max = incident_sum['inc_max'].max()
+inc_max_min = incident_sum['inc_max'].min()
+incident_sum['rel_inc_max'] = (incident_sum['inc_max'] * 1.0 - inc_max_min) / (inc_max_max - inc_max_min)
+incident_sum['color'] = (incident_sum['rel_inc_max'] * total_colors).astype(int).clip(upper = total_colors - 1)
+
+choropleth = incident_sum[[0, 1, 'color']].astype(int).values
+
+center_lat = (37.706 + 37.814) / 2
+center_lon = (-122.519 - 122.354) / 2
+gmap = gmplot.GoogleMapPlotter(center_lat, center_lon, 13)
+
+for row in choropleth:
+    s = lat_grid[row[0]]
+    n = lat_grid[row[0] + 1]
+    w = lon_grid[row[1]]
+    e = lon_grid[row[1] + 1]
+    gmap.polygon([s, n, n, s], [w, w, e, e], color = color_progression[row[2]])
+
+gmap.draw("mymap.html")

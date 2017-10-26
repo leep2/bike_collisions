@@ -53,6 +53,13 @@ def grid(geo, latitude_grid, longitude_grid):
         grid_arr[i][1] = bisect.bisect(longitude_grid, g[1]) - 1
     return grid_arr
 
+def filter_bounds(arr, height, width):
+    mask0a = arr[:, 0] >= 0
+    mask0b = arr[:, 0] < height
+    mask1a = arr[:, 1] >= 0
+    mask1b = arr[:, 1] < width
+    return arr[mask0a & mask0b & mask1a & mask1b]
+
 def strava_api_segments(bounds, height, width):
     strava_client = client.Client(access_token = credentials.key['strava'])
     latitude_grid, longitude_grid = lat_lon_grid(bounds, height, width)
@@ -103,9 +110,9 @@ def color_map(df, column, bounds, latitude_grid, longitude_grid):
     df['rel_value'] = (df[column] * 1.0 - low) / (high - low)
     df['color'] = (df['rel_value'] * num_colors).astype(int).clip(upper = num_colors - 1)
     c_map = df[['y', 'x', 'color']].astype(int).values
-    center_lat = (bbox['min_lat'] + bbox['max_lat']) * 1.0 / 2
-    center_lon = (bbox['min_lon'] + bbox['max_lon']) * 1.0 / 2
-    gmap = gmplot.GoogleMapPlotter(center_lat, center_lon, 13)
+    center_lat = (bounds['min_lat'] + bounds['max_lat']) * 1.0 / 2
+    center_lon = (bounds['min_lon'] + bounds['max_lon']) * 1.0 / 2
+    gmap = gmplot.GoogleMapPlotter(center_lat, center_lon, 12)
     for row in c_map:
         s = latitude_grid[row[0]]
         n = latitude_grid[row[0] + 1]
@@ -114,6 +121,30 @@ def color_map(df, column, bounds, latitude_grid, longitude_grid):
         gmap.polygon([s, n, n, s], [w, w, e, e], color = color_progression[row[2]])
     gmap.draw("mymap.html")
 
+def gridlines(g, bounds, height, width):
+#    center_lat = (bounds['min_lat'] + bounds['max_lat']) * 1.0 / 2
+#    center_lon = (bounds['min_lon'] + bounds['max_lon']) * 1.0 / 2
+    lat_inc = (bounds['max_lat'] - bounds['min_lat']) * 1.0 / height
+    lon_inc = (bounds['max_lon'] - bounds['min_lon']) * 1.0 / width
+#    gmap = gmplot.GoogleMapPlotter(center_lat, center_lon, 12)
+    g.grid(bounds['min_lat'] - lat_inc / 2, bounds['max_lat'] - lat_inc / 2, lat_inc, bounds['min_lon'] - lon_inc / 2, bounds['max_lon'] - lon_inc / 2, lon_inc)
+    #gmap.draw("mymap.html")
+
+def gm_scatter(geo, bounds, height, width, c):
+    center_lat = (bounds['min_lat'] + bounds['max_lat']) * 1.0 / 2
+    center_lon = (bounds['min_lon'] + bounds['max_lon']) * 1.0 / 2
+    gmap = gmplot.GoogleMapPlotter(center_lat, center_lon, 12)
+    gridlines(gmap, bounds, height, width)
+    gmap.scatter(geo[:, 0], geo[:, 1], color = c, marker = False)
+    gmap.draw('mymap.html')
+
+def gm_heat(geo, bounds):
+    center_lat = (bounds['min_lat'] + bounds['max_lat']) * 1.0 / 2
+    center_lon = (bounds['min_lon'] + bounds['max_lon']) * 1.0 / 2
+    gmap = gmplot.GoogleMapPlotter(center_lat, center_lon, 12)
+    gmap.heatmap(geo[:, 0], geo[:, 1])
+    gmap.draw('mymap.html')
+
 if __name__ == '__main__':
     '''
     collisions = read_collision_data()
@@ -121,13 +152,19 @@ if __name__ == '__main__':
     collision_geo = google_api_geo(intersections, num_collisions)
     '''
     collision_geo = np.loadtxt('collision_geo.csv', delimiter = ',')
-    bbox = bounding_box(-122.516, 37.707, -122.356, 37.813)
-    lat_grid, lon_grid = lat_lon_grid(bbox, 4, 6)
+#    bbox = bounding_box(-122.516, 37.707, -122.356, 37.813)
+    bbox = bounding_box(-122.463, 37.734, -122.383, 37.813)
+    lat_grid, lon_grid = lat_lon_grid(bbox, 5, 5)
     collision_grid = grid(collision_geo, lat_grid, lon_grid)
+    collision_grid = filter_bounds(collision_grid, 5, 5)
 #    effort = strava_api_segments(bbox, 4, 6)
     effort = np.loadtxt('segment_detail.csv', delimiter = ',')
     e_grid = grid(effort, lat_grid, lon_grid)
     effort_grid = effort_geo_to_grid(e_grid, effort)
+    effort_grid = filter_bounds(effort_grid, 5, 5)
     collision_effort = combine_collision_effort(collision_grid, effort_grid)
-    color_map(collision_effort, 'col_max', bbox, lat_grid, lon_grid)
-    print collision_effort
+#    print collision_effort
+#    color_map(collision_effort, 'col_max', bbox, lat_grid, lon_grid)
+#    gm_scatter(collision_geo, bbox, 5, 5, 'magenta')
+    gm_scatter(effort, bbox, 5, 5, 'blue')
+#    gm_heat(collision_geo, bbox)

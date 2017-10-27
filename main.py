@@ -95,11 +95,14 @@ def combine_collision_effort(col, eff):
     df_effort = df_effort[['y', 'x', 'adj_efforts']]
     max_effort = df_effort.groupby(['y', 'x'], as_index = False).max()
     mean_effort = df_effort.groupby(['y', 'x'], as_index = False).mean()
-    collision_max = collision_count.merge(max_effort, left_on = ['y', 'x'], right_on = ['y', 'x'])
-    collision_max_mean = collision_max.merge(mean_effort, left_on = ['y', 'x'], right_on = ['y', 'x'])
+    collision_max = collision_count.merge(max_effort, how = 'right', on = ['y', 'x'])
+    collision_max.fillna(0, inplace = True)
+    collision_max_mean = collision_max.merge(mean_effort, on = ['y', 'x'])
     collision_max_mean.columns = ['y', 'x', 'count', 'max', 'mean']
-    collision_max_mean['col_max'] = collision_max_mean['count'] / collision_max_mean['max']
-    collision_max_mean['col_mean'] = collision_max_mean['count'] / collision_max_mean['mean']
+    collision_max_mean['count_max'] = collision_max_mean['count'] / collision_max_mean['max']
+    collision_max_mean['count_mean'] = collision_max_mean['count'] / collision_max_mean['mean']
+    collision_max_mean['count_log_max'] = collision_max_mean['count'] / np.log(collision_max_mean['max'])
+    collision_max_mean['count_log_mean'] = collision_max_mean['count'] / np.log(collision_max_mean['mean'])
     return collision_max_mean
 
 def color_map(df, column, bounds, latitude_grid, longitude_grid):
@@ -130,13 +133,13 @@ def gridlines(g, bounds, height, width):
     g.grid(bounds['min_lat'] - lat_inc / 2, bounds['max_lat'] - lat_inc / 2, lat_inc, bounds['min_lon'] - lon_inc / 2, bounds['max_lon'] - lon_inc / 2, lon_inc)
     #gmap.draw("mymap.html")
 
-def gm_scatter(geo, bounds, height, width, c):
+def gm_scatter(geo, bounds, height, width, c, filename):
     center_lat = (bounds['min_lat'] + bounds['max_lat']) * 1.0 / 2
     center_lon = (bounds['min_lon'] + bounds['max_lon']) * 1.0 / 2
     gmap = gmplot.GoogleMapPlotter(center_lat, center_lon, 12)
     gridlines(gmap, bounds, height, width)
     gmap.scatter(geo[:, 0], geo[:, 1], color = c, marker = False)
-    gmap.draw('mymap.html')
+    gmap.draw(filename)
 
 def gm_heat(geo, bounds):
     center_lat = (bounds['min_lat'] + bounds['max_lat']) * 1.0 / 2
@@ -154,17 +157,18 @@ if __name__ == '__main__':
     collision_geo = np.loadtxt('collision_geo.csv', delimiter = ',')
 #    bbox = bounding_box(-122.516, 37.707, -122.356, 37.813)
     bbox = bounding_box(-122.463, 37.734, -122.383, 37.813)
-    lat_grid, lon_grid = lat_lon_grid(bbox, 5, 5)
+    h = 7
+    w = 7
+    lat_grid, lon_grid = lat_lon_grid(bbox, h, w)
     collision_grid = grid(collision_geo, lat_grid, lon_grid)
-    collision_grid = filter_bounds(collision_grid, 5, 5)
-#    effort = strava_api_segments(bbox, 4, 6)
-    effort = np.loadtxt('segment_detail.csv', delimiter = ',')
+    collision_grid = filter_bounds(collision_grid, h, w)
+#    effort = strava_api_segments(bbox, 8, 12)
+    effort = np.loadtxt('segment_detail4x6.csv', delimiter = ',')
     e_grid = grid(effort, lat_grid, lon_grid)
     effort_grid = effort_geo_to_grid(e_grid, effort)
-    effort_grid = filter_bounds(effort_grid, 5, 5)
+    effort_grid = filter_bounds(effort_grid, h, w)
     collision_effort = combine_collision_effort(collision_grid, effort_grid)
-#    print collision_effort
-#    color_map(collision_effort, 'col_max', bbox, lat_grid, lon_grid)
-#    gm_scatter(collision_geo, bbox, 5, 5, 'magenta')
-    gm_scatter(effort, bbox, 5, 5, 'blue')
+    color_map(collision_effort, 'count_max', bbox, lat_grid, lon_grid)
+    gm_scatter(collision_geo, bbox, h, w, 'magenta', 'collision_map.html')
+    gm_scatter(effort, bbox, h, w, 'blue', 'segment_map.html')
 #    gm_heat(collision_geo, bbox)

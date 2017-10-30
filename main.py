@@ -103,6 +103,9 @@ def combine_collision_effort(col, eff):
     collision_max_mean['count_mean'] = collision_max_mean['count'] / collision_max_mean['mean']
     collision_max_mean['count_log_max'] = collision_max_mean['count'] / np.log(collision_max_mean['max'])
     collision_max_mean['count_log_mean'] = collision_max_mean['count'] / np.log(collision_max_mean['mean'])
+    collision_max_mean['log_count_max'] = np.log(1 + collision_max_mean['count'] * 1.0 / collision_max_mean['max'])
+    collision_max_mean['log_count_mean'] = np.log(1 + collision_max_mean['count'] * 1.0 / collision_max_mean['mean'])
+    print collision_max_mean
     return collision_max_mean
 
 def color_map(df, column, bounds, latitude_grid, longitude_grid):
@@ -163,12 +166,12 @@ if __name__ == '__main__':
     collision_grid = grid(collision_geo, lat_grid, lon_grid)
     collision_grid = filter_bounds(collision_grid, h, w)
 #    effort = strava_api_segments(bbox, 8, 12)
-    effort = np.loadtxt('segment_detail4x6.csv', delimiter = ',')
+    effort = np.loadtxt('segment_detail.csv', delimiter = ',')
     e_grid = grid(effort, lat_grid, lon_grid)
     effort_grid = effort_geo_to_grid(e_grid, effort)
     effort_grid = filter_bounds(effort_grid, h, w)
     collision_effort = combine_collision_effort(collision_grid, effort_grid)
-    color_map(collision_effort, 'count_max', bbox, lat_grid, lon_grid)
+    color_map(collision_effort, 'log_count_max', bbox, lat_grid, lon_grid)
     gm_scatter(collision_geo, bbox, h, w, 'magenta', 'collision_map.html')
     gm_scatter(effort, bbox, h, w, 'blue', 'segment_map.html')
 #    gm_heat(collision_geo, bbox)

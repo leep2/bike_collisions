@@ -1,6 +1,10 @@
 San Francisco is a great place to live if you don't have a car.  Lots of well designed crosswalks, streets/lanes.  It also has a lot of bike accidents.  According to SWITRS, there were over 600 bike collisions in 2016.  That's an average of almost 2 a day!
 
-So what does that look like?  We see a lot of red around Downtown/Market St.  But are there a lot of collisions because it's actually more risky?
+So what does that look like?
+
+![Alt text](/images/collisions.png?raw=true "Optional Title")
+
+We see a lot of red around Downtown/Market St.  But are there a lot of collisions because it's actually more risky?
 Or is it because there are a lot of bikes running through that area?
 
 As mentioned earlier, collision data is readily available through the statewide system.  Bike volume, not so much.  The traditional way of gathering that data is by standing at intersections and counting how many bikes passed by.

@@ -1,4 +1,4 @@
-San Francisco is a great place to live if you don't have a car.  Lots of well designed crosswalks, streets/lanes.  It also has a lot of bike accidents.  According to SWITRS, there were over 600 bike collisions in 2016.  That's an average of almost 2 a day!
+San Francisco is a great place to live if you don't have a car.  Lots of well designed crosswalks, streets/lanes.  It also has a lot of bike accidents.  According to SWITRS (California Statewide Integrated Traffic Records System), there were over 600 bike collisions in 2016.  That's an average of almost 2 a day!
 
 So what does that look like?
 
@@ -20,11 +20,7 @@ Each one of these blue points is a route where Strava users have recorded hundre
 I focused on the northeastern part of SF where almost all collisions occur.  I divided it into grid squares - in each square, I matched the collisions with the bike volume.
 
 ![Alt text](/images/bike_volume.png?raw=true)
-So there's a lot of bike activity on the periphery.  On the strict collision count map earlier, here was red, but we see that there are a lot of bikes going through here.
+So there's a lot of bike activity on the periphery and middle.  On the strict collision count map earlier, the middle was very red, but we see that there are a lot of bikes going through there.
 
 ![Alt text](/images/collision_frequency.png?raw=true)
-Putting collisions and volume together - that area in downtown/Market is actually not too bad.  It's actually the south part of the Mission district that's not so good.  (1 collision in about 50 Strava rides)
-
-The City of SF is in the process of making improvmeents for bike/pedestrian safety here.  Maybe they could look into here as well.
-
-I don't think there is enough data to zoom in even closer here.  It would be interesting to get commercial access to Strava's data - called Strava Metro
+Putting collisions and volume together - that area in downtown/Market is actually not too bad.  It's actually the south part of the Mission district that's not so good.  (1 collision in about 50 Strava rides) I don't think there is enough data to zoom in even closer here.  It would be interesting to get commercial access to Strava's data (Strava Metro).
